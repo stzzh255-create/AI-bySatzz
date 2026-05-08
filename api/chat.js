@@ -1,27 +1,37 @@
 export default async function handler(req,res){
 
-    const response =
-    await fetch(
-    "https://openrouter.ai/api/v1/chat/completions",
-    {
-        method:"POST",
+    try{
 
-        headers:{
-            "Authorization":
-            "Bearer " +
-            process.env.OPENROUTER_API_KEY,
+        const response =
+        await fetch(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+            method:"POST",
 
-            "Content-Type":
-            "application/json"
-        },
+            headers:{
+                "Authorization":
+                "Bearer " +
+                process.env.OPENROUTER_API_KEY,
 
-        body:JSON.stringify(req.body)
+                "Content-Type":
+                "application/json"
+            },
 
-    });
+            body:JSON.stringify(req.body)
 
-    const data =
-    await response.json();
+        });
 
-    res.status(200).json(data);
+        const data =
+        await response.json();
+
+        res.status(200).json(data);
+
+    }catch(err){
+
+        res.status(500).json({
+            error:err.toString()
+        });
+
+    }
 
 }
