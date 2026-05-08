@@ -1,0 +1,2 @@
+# AI-bySatzz
+AI PROJECT
