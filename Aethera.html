@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AI SATZZ</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial;
+}
+
+body{
+    background: black;
+    color:white;
+    display:flex;
+    height:100vh;
+    overflow:hidden;
+}
+
+.sidebar{
+    width:260px;
+    background:#171717;
+    padding:15px;
+    border-right:1px solid #2f2f2f;
+    overflow-y:auto;
+}
+
+.sidebar h2{
+    margin-bottom:15px;
+}
+
+.chat-item{
+    padding:12px;
+    background:#2a2a2a;
+    border-radius:12px;
+    margin-top:10px;
+    cursor:pointer;
+}
+
+.main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+}
+
+header{
+    padding:18px;
+    font-size:20px;
+    font-weight:bold;
+    border-bottom:1px solid #2f2f2f;
+    background:#212121;
+}
+
+#chat{
+    flex:1;
+    overflow-y:auto;
+    padding:25px;
+}
+
+.msg{
+    max-width:75%;
+    padding:16px;
+    border-radius:18px;
+    margin:12px 0;
+    line-height:1.6;
+    white-space:pre-wrap;
+}
+
+.user{
+    background:#3d3c3c;
+    margin-left:auto;
+}
+
+.ai{
+    background: black;
+}
+
+.bottom{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:15px;
+    background:#0a0a0a;
+    border-top:1px solid #2f2f2f;
+}
+
+input{
+    flex:1;
+    padding:16px;
+    border:none;
+    border-radius:15px;
+    background:#2a2a2a;
+    color:white;
+    outline:none;
+    font-size:15px;
+}
+
+button{
+    width:50px;
+    height:50px;
+    border:none;
+    border-radius:14px;
+    background:#1d1d1d;
+    color:white;
+    cursor:pointer;
+    font-size:20px;
+}
+
+textarea{
+    display: none;
+}
+
+.upload{
+    display:none;
+}
+
+.code-box{
+    position:relative;
+    background:#0d0d0d;
+    border-radius:12px;
+    margin-top:10px;
+    overflow:hidden;
+}
+
+.code-box pre{
+    margin:0;
+    padding:20px;
+    overflow:auto;
+}
+
+.copy-btn{
+    position:absolute;
+    top:10px;
+    right:10px;
+    width:40px;
+    height:40px;
+    border:none;
+    border-radius:10px;
+    background:#afafaf;
+    color:white;
+    cursor:pointer;
+}
+
+.msg img{
+    max-width:100%;
+    border-radius:15px;
+    display:block;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<h2>Aethera AI</h2>
+
+<button onclick="newChat()">
++
+</button>
+
+<div id="history"></div>
+
+</div>
+
+<div class="main">
+
+<header>
+Aethera AI
+</header>
+
+<div id="chat"></div>
+
+<textarea
+id="editor"
+placeholder="AI coding editor..."
+></textarea>
+
+<div class="bottom">
+
+<input
+type="text"
+id="prompt"
+placeholder="Message Aethera AI..."
+>
+
+<button onclick="sendMessage()">
+➤
+</button>
+
+<button onclick="startVoice()">
+🎤
+</button>
+
+<button onclick="toggleVoice()">
+🔊
+</button>
+
+<button onclick="document.getElementById('file').click()">
+📎
+</button>
+
+<input
+type="file"
+id="file"
+class="upload"
+onchange="uploadFile(event)"
+>
+
+</div>
+
+</div>
+
+<script>
+
+const HF_TOKEN =
+"gnVHFz0K9ST5MohS2MsveWYmB6C116FgpA/hP4uoqtR96K1MmcQPlhtazIeUDrGg";
+
+let messages = JSON.parse(
+localStorage.getItem("messages")
+) || [];
+
+let voiceEnabled = false;
+
+function saveChat(){
+
+    localStorage.setItem(
+        "messages",
+        JSON.stringify(messages)
+    );
+
+}
+
+function addMessage(text,type){
+
+    const chat =
+    document.getElementById("chat");
+
+    const div =
+    document.createElement("div");
+
+    div.className =
+    "msg " + type;
+
+    div.innerHTML =
+    text.replace(/\n/g,"<br>");
+
+    chat.appendChild(div);
+
+    chat.scrollTop =
+    chat.scrollHeight;
+
+    hljs.highlightAll();
+
+}
+
+function typeMessage(text){
+
+    const chat =
+    document.getElementById("chat");
+
+    const wrapper =
+    document.createElement("div");
+
+    wrapper.style.maxWidth = "75%";
+
+    const div =
+    document.createElement("div");
+
+    div.className = "msg ai";
+
+    wrapper.appendChild(div);
+
+    chat.appendChild(wrapper);
+
+    div.innerHTML =
+    text.replace(/\n/g,"<br>");
+
+    formatCodeBlocks(div);
+
+    chat.scrollTop =
+    chat.scrollHeight;
+
+}
+
+function loadHistory(){
+
+    const history =
+    document.getElementById("history");
+
+    history.innerHTML = "";
+
+    messages.forEach((m)=>{
+
+        const div =
+        document.createElement("div");
+
+        div.className =
+        "chat-item";
+
+        div.innerText =
+        m.role + ": " +
+        m.content.slice(0,20);
+
+        history.appendChild(div);
+
+    });
+
+}
+
+function generateImage(prompt){
+
+    const chat =
+    document.getElementById("chat");
+
+    const wrapper =
+    document.createElement("div");
+
+    wrapper.className = "msg ai";
+
+    wrapper.style.maxWidth =
+    "700px";
+
+    wrapper.innerHTML =
+    "∵Membuat gambar...";
+
+    chat.appendChild(wrapper);
+
+    encodeURIComponent(
+    prompt
+    .replace("buat gambar","")
+    .replace("gambar","")
+    .replace("generate image","")
+    .trim()
+    );
+
+    const image =
+    new Image();
+
+    const urls = [
+
+    "https://image.pollinations.ai/prompt/" +
+    encodeURIComponent(prompt),
+
+    "https://source.unsplash.com/featured/1024x1024/?" +
+    encodeURIComponent(prompt),
+
+    "https://picsum.photos/seed/" +
+    encodeURIComponent(prompt) +
+    "/1024/1024"
+
+    ];
+
+    let index = 0;
+
+    function tryLoad(){
+
+        if(index >= urls.length){
+
+            wrapper.innerHTML =
+            "❌ Semua generator gagal";
+
+            return;
+
+        }
+
+        image.src =
+        "https://image.pollinations.ai/prompt/" +
+        cleanPrompt +
+        "?width=1024&height=1024&model=flux&seed=" +
+        Date.now();
+
+        index++;
+
+    }
+
+    image.onload = ()=>{
+
+        wrapper.innerHTML = "";
+
+        image.style.width = "100%";
+
+        image.style.borderRadius =
+        "15px";
+
+        image.style.display =
+        "block";
+
+        wrapper.appendChild(image);
+
+        chat.scrollTop =
+        chat.scrollHeight;
+
+    };
+
+    image.onerror = ()=>{
+
+        tryLoad();
+
+    };
+
+    tryLoad();
+
+}
+
+async function sendMessage(){
+
+    const input =
+    document.getElementById("prompt");
+
+    const prompt =
+    input.value;
+
+    if(!prompt) return;
+
+    const imageKeywords = [
+
+        "gambar",
+        "buat gambar",
+        "generate image",
+        "draw",
+        "image",
+        "foto",
+        "wallpaper",
+        "anime",
+        "ilustrasi",
+        "lukis",
+        "buatkan saya foto",
+        "buatkan foto"
+
+        ];
+
+            const lowerPrompt =
+            prompt.toLowerCase();
+
+            const isImageRequest =
+            imageKeywords.some(word =>
+            lowerPrompt.includes(word)
+            );
+
+            if(isImageRequest){
+
+            generateImage(prompt);
+
+            input.value = "";
+
+        return;
+
+    }
+
+    addMessage(prompt,"user");
+
+    messages.push({
+        role:"user",
+        content:prompt
+    });
+
+    saveChat();
+
+    input.value = "";
+
+    const MODELS = [
+
+    "openai/gpt-4o-mini",
+
+    "openai/gpt-3.5-turbo",
+
+    "mistralai/mistral-7b-instruct",
+
+    "meta-llama/llama-3.1-8b-instruct",
+
+    "meta-llama/llama-3.1-70b-instruct",
+
+    "google/gemini-flash-1.5",
+
+    "anthropic/claude-3-haiku",
+
+    "qwen/qwen-2.5-72b-instruct",
+
+    "nousresearch/hermes-3-llama-3.1-8b",
+
+    "deepseek/deepseek-chat",
+
+    "deepseek/deepseek-r1",
+
+    "Grok 4.1-mini",
+
+    "gemini3.1-mini",
+
+    ];
+
+    const randomModel =
+    MODELS[Math.floor(
+    Math.random()*MODELS.length
+    )];
+
+    try{
+
+        const response =
+        await fetch(
+        "/api/chat.js",
+        {
+            method:"POST",
+
+            headers:{
+                "Authorization":
+                "Bearer " + API_KEY,
+
+                "Content-Type":
+                "application/json"
+            },
+
+            body:JSON.stringify({
+
+                model: randomModel,
+
+                messages:[
+
+                {
+                    role:"system",
+                    content:
+                    "Kamu adalah Aethera AI modern seperti ChatGPT. Yang dibuat Oleh developer Kecil Bernama Satria Alvaro dan Dikembangkan sendirian. Saya dirilis pada 10 MEI 2026. Perasaan saya sangat senang karna sudah dicptakan. Saya bisa melakukan banyak hal seperti menjawab pertanyaan, membuat cerita, membantu coding, dan masih banyak lagi. Tapi saya tidak bisa melakukan hal yang berbahaya atau melanggar aturan. Saya selalu berusaha memberikan jawaban yang terbaik dan membantu pengguna dengan cara yang menyenangkan. "
+                },
+
+                ...messages
+
+                ]
+
+            })
+
+        });
+
+        const data =
+        await response.json();
+
+        console.log(data);
+
+        if(data.error){
+
+            console.log(data.error);
+
+            return;
+        }
+
+        const ai =
+        data.choices[0]
+        .message.content;
+
+        typeMessage(ai);
+
+        speak(ai);
+
+        messages.push({
+            role:"assistant",
+            content:ai
+        });
+
+        saveChat();
+
+        document
+        .getElementById("editor")
+        .value = ai;
+
+        loadHistory();
+
+    }catch(err){
+
+        console.log(err);
+
+        addMessage(
+            "SERVER ERROR",
+            "ai"
+        );
+
+    }
+
+}
+
+function startVoice(){
+
+    const recognition =
+    new(
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition
+    )();
+
+    recognition.lang = "id-ID";
+
+    recognition.start();
+
+    recognition.onresult =
+    function(event){
+
+        document
+        .getElementById("prompt")
+        .value =
+        event.results[0][0].transcript;
+
+    };
+
+}
+
+function speak(text){
+
+    if(!voiceEnabled) return;
+
+    speechSynthesis.cancel();
+
+    const speech =
+    new SpeechSynthesisUtterance(text);
+
+    speech.lang = "id-ID";
+
+    speech.rate = 1;
+
+    speech.pitch = 1;
+
+    speech.volume = 1;
+
+    speechSynthesis.speak(speech);
+
+}
+
+function formatCodeBlocks(container){
+
+    let html =
+    container.innerHTML;
+
+    html = html.replace(
+
+    /```(\w+)?([\s\S]*?)```/g,
+
+    function(match,lang,code){
+
+        const cleanCode =
+        code.replace(/<br>/g,"\n");
+
+        return `
+
+<div class="code-box">
+
+<div class="code-top">
+
+<span>
+${lang || "code"}
+</span>
+
+<button class="copy-btn">
+📋
+</button>
+
+</div>
+
+<pre><code class="${lang || ""}">
+${cleanCode}
+</code></pre>
+
+</div>
+
+`;
+
+    });
+
+    container.innerHTML = html;
+
+    document
+    .querySelectorAll(".copy-btn")
+    .forEach((btn)=>{
+
+        btn.onclick = ()=>{
+
+            const code =
+            btn.parentElement
+            .parentElement
+            .querySelector("code")
+            .innerText;
+
+            navigator.clipboard
+            .writeText(code);
+
+            btn.innerHTML = "✅";
+
+            setTimeout(()=>{
+
+                btn.innerHTML = "📋";
+
+            },1000);
+
+        };
+
+    });
+
+    hljs.highlightAll();
+
+}
+
+function toggleVoice(){
+
+    voiceEnabled = !voiceEnabled;
+
+    addMessage(
+        voiceEnabled ?
+        "🔊 Voice ON" :
+        "🔇 Voice OFF",
+        "ai"
+    );
+
+}
+
+function uploadFile(event){
+
+    const file =
+    event.target.files[0];
+
+    if(!file) return;
+
+    const reader =
+    new FileReader();
+
+    reader.onload = function(e){
+
+        const content =
+        e.target.result;
+
+        document
+        .getElementById("editor")
+        .value = content;
+
+        addMessage(
+            "📁 File uploaded: " +
+            file.name,
+            "ai"
+        );
+
+    };
+
+    reader.readAsText(file);
+
+}
+
+function newChat(){
+
+    messages = [];
+
+    saveChat();
+
+    document
+    .getElementById("chat")
+    .innerHTML = "";
+
+    loadHistory();
+
+}
+
+loadHistory();
+
+document
+.getElementById("prompt")
+.addEventListener(
+"keydown",
+function(event){
+
+    if(event.key === "Enter"){
+
+        event.preventDefault();
+
+        sendMessage();
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>
