@@ -532,7 +532,7 @@ async function sendMessage(){
         }
 
         const ai =
-        data.choices[0]
+        data.result.choices[0]
         .message.content;
 
         typeMessage(ai);
