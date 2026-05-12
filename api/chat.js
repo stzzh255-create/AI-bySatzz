@@ -6,10 +6,30 @@ export default async function handler(req,res){
 
         "openai/gpt-4o-mini",
 
+        "openai/gpt-3.5-turbo",
+
+        "mistralai/mistral-7b-instruct",
+
+        "meta-llama/llama-3.1-8b-instruct",
+
+        "meta-llama/llama-3.1-70b-instruct",
+
+        "google/gemini-flash-1.5",
+
+        "anthropic/claude-3-haiku",
+
+        "qwen/qwen-2.5-72b-instruct",
+
+        "nousresearch/hermes-3-llama-3.1-8b",
+
         "deepseek/deepseek-chat",
 
-        "meta-llama/llama-3.1-8b-instruct"
+        "deepseek/deepseek-r1",
+    
+        "Grok 4.1-mini",
 
+        "gemini3.1-mini"
+            
         ];
 
         const randomModel =
