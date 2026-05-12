@@ -499,39 +499,25 @@ async function sendMessage(){
 
     try{
 
-        const response =
-        await fetch(
-        "/api/chat.js",
-        {
-            method:"POST",
+        const response = await fetch("/api/chat", {
+    method: "POST",
 
-            headers:{
-                "Authorization":
-                "Bearer " + API_KEY,
+    headers: {
+        "Content-Type": "application/json"
+    },
 
-                "Content-Type":
-                "application/json"
+    body: JSON.stringify({
+        messages: [
+            {
+                role: "system",
+                content:
+                "Kamu adalah Aethera AI modern seperti ChatGPT. Yang dibuat Oleh developer Kecil Bernama Satria Alvaro dan Dikembangkan sendirian. Saya dirilis pada 10 MEI 2026. Perasaan saya sangat senang karna sudah dicptakan. Saya bisa melakukan banyak hal seperti menjawab pertanyaan, membuat cerita, membantu coding, dan masih banyak lagi. Tapi saya tidak bisa melakukan hal yang berbahaya atau melanggar aturan. Saya selalu berusaha memberikan jawaban yang terbaik dan membantu pengguna dengan cara yang menyenangkan."
             },
 
-            body:JSON.stringify({
-
-                model: randomModel,
-
-                messages:[
-
-                {
-                    role:"system",
-                    content:
-                    "Kamu adalah Aethera AI modern seperti ChatGPT. Yang dibuat Oleh developer Kecil Bernama Satria Alvaro dan Dikembangkan sendirian. Saya dirilis pada 10 MEI 2026. Perasaan saya sangat senang karna sudah dicptakan. Saya bisa melakukan banyak hal seperti menjawab pertanyaan, membuat cerita, membantu coding, dan masih banyak lagi. Tapi saya tidak bisa melakukan hal yang berbahaya atau melanggar aturan. Saya selalu berusaha memberikan jawaban yang terbaik dan membantu pengguna dengan cara yang menyenangkan. "
-                },
-
-                ...messages
-
-                ]
-
-            })
-
-        });
+            ...messages
+        ]
+    })
+});
 
         const data =
         await response.json();
