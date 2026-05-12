@@ -1,52 +1,60 @@
-export default async function handler(req, res) {
+export default async function handler(req,res){
 
-    if (req.method !== "POST") {
-        return res.status(405).json({
-            error: "Method not allowed"
-        });
-    }
+    try{
 
-    try {
+        const MODELS = [
 
-        const models = [
-            "openai/gpt-4o-mini",
-            "meta-llama/llama-3.1-8b-instruct",
-            "anthropic/claude-3-haiku"
+        "openai/gpt-4o-mini",
+
+        "deepseek/deepseek-chat",
+
+        "meta-llama/llama-3.1-8b-instruct"
+
         ];
 
         const randomModel =
-            models[Math.floor(Math.random() * models.length)];
+        MODELS[Math.floor(
+        Math.random()*MODELS.length
+        )];
 
-        const response = await fetch(
-            "https://openrouter.ai/api/v1/chat/completions",
-            {
-                method: "POST",
+        const response =
+        await fetch(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+            method:"POST",
 
-                headers: {
-                    "Authorization":
-                        "Bearer " +
-                        process.env.OPENROUTER_API_KEY,
+            headers:{
+                "Authorization":
+                "Bearer " +
+                process.env.OPENROUTER_API_KEY,
 
-                    "Content-Type":
-                        "application/json"
-                },
+                "Content-Type":
+                "application/json"
+            },
 
-                body: JSON.stringify({
-                    model: randomModel,
-                    messages: req.body.messages
-                })
+            body:JSON.stringify({
 
-            }
-        );
+                model: randomModel,
 
-        const data = await response.json();
+                messages:req.body.messages
 
-        res.status(200).json(data);
+            })
 
-    } catch (err) {
+        });
+
+        const data =
+        await response.json();
+
+        res.status(200).json({
+
+            result:data
+
+        });
+
+    }catch(err){
 
         res.status(500).json({
-            error: err.message
+            error:err.message
         });
 
     }
