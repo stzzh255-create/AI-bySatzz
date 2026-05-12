@@ -295,21 +295,13 @@ function typeMessage(text){
 
 }
 
-    export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  const models = [
-    "openai/gpt-4o-mini",
-    "openai/gpt-4o",
-    "anthropic/claude-3.5-sonnet",
-    "meta-llama/llama-3.1-8b-instruct"
-  ];
-
-  function getRandomModel() {
-    return models[Math.floor(Math.random() * models.length)];
-  }
+function getRandomModel() {
+    return models[
+        Math.floor(
+            Math.random() * models.length
+        )
+    ];
+}
 
 function generateImage(prompt){
 
