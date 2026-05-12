@@ -751,18 +751,8 @@ function(event){
 });
 
 document
-.getElementById("prompt")
-.addEventListener("keydown", function(event){
-
-    if(event.key === "Enter"){
-
-        event.preventDefault();
-
-        sendMessage();
-
-    }
-
-});
+.getElementById("sendBtn")
+.addEventListener("click", sendMessage);
 
 </script>
 
